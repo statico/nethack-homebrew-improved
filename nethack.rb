@@ -27,12 +27,14 @@ class Nethack < Formula
 
   def patches
     p = []
+    p << 'http://nethack.edeca.net/karl/nh343-curses-beta3.patch.gz'
     p << 'http://bilious.alt.org/~paxed/nethack/nh343-menucolor.diff' # Menucolors
     p << 'http://bilious.alt.org/?download=44' # Paranoid Quit
-    p << 'http://bilious.alt.org/?download=205' # use_darkgrey
+    #p << 'http://bilious.alt.org/?download=205' # use_darkgrey
     p << 'http://bilious.alt.org/~paxed/nethack/nh343-showbuc.diff' # Show BUC
     p << 'http://bilious.alt.org/~paxed/nethack/nh343-showsym.diff' # Show Sym
     p << 'http://ben-kiki.org/oren/statuscolors/nh343-statuscolors.patch' # statuscolors
+    p << 'http://bilious.alt.org/?download=412' # fcntl
     p << DATA
   end
 
@@ -67,7 +69,7 @@ class Nethack < Formula
 
     # Make the game
     ENV.append_to_cflags "-I../include"
-    system 'cd src;make'
+    system 'cd src;make -j8'
 
     bin.install 'src/nethack'
     (libexec+'save').mkpath
@@ -91,12 +93,8 @@ diff --git a/include/system.h b/include/system.h
 index a4efff9..cfe96f1 100644
 --- a/include/system.h
 +++ b/include/system.h
-@@ -79,10 +79,10 @@ typedef long	off_t;
- # if !defined(__SC__) && !defined(LINUX)
- E  long NDECL(random);
- # endif
--# if (!defined(SUNOS4) && !defined(bsdi) && !defined(__FreeBSD__)) || defined(RANDOM)
-+# if (!defined(SUNOS4) && !defined(bsdi) && !defined(__NetBSD__) && !defined(__FreeBSD__) && !defined(__DragonFly__) && !defined(__APPLE__)) || defined(RANDOM)
+@@ -82,7 +82,7 @@
+ # if (!defined(SUNOS4) && !defined(bsdi) && !defined(__NetBSD__) && !defined(__FreeBSD__) && !defined(__DragonFly__) && !defined(__APPLE__)) || defined(RANDOM)
  E void FDECL(srandom, (unsigned int));
  # else
 -#  if !defined(bsdi) && !defined(__FreeBSD__)
@@ -187,25 +185,13 @@ diff --git a/sys/unix/Makefile.src b/sys/unix/Makefile.src
 index 29ad99a..7842af2 100644
 --- a/sys/unix/Makefile.src
 +++ b/sys/unix/Makefile.src
-@@ -151,8 +151,8 @@ GNOMEINC=-I/usr/lib/glib/include -I/usr/lib/gnome-libs/include -I../win/gnome
- # flags for debugging:
- # CFLAGS = -g -I../include
- 
--CFLAGS = -O -I../include
--LFLAGS = 
-+#CFLAGS = -O -I../include
-+#LFLAGS = 
- 
- # The Qt and Be window systems are written in C++, while the rest of
- # NetHack is standard C.  If using Qt, uncomment the LINK line here to get
 @@ -230,8 +230,8 @@ WINOBJ = $(WINTTYOBJ)
  # WINTTYLIB = -ltermcap
  # WINTTYLIB = -lcurses
  # WINTTYLIB = -lcurses16
 -# WINTTYLIB = -lncurses
--WINTTYLIB = -ltermlib
 +WINTTYLIB = -lncurses
-+#WINTTYLIB = -ltermlib
+ # WINTTYLIB = -ltermlib
  #
  # libraries for X11
  # If USE_XPM is defined in config.h, you will also need -lXpm here.
