@@ -32,7 +32,7 @@ class Nethack < Formula
     p << 'http://bilious.alt.org/?download=205' # use_darkgrey
     p << 'http://bilious.alt.org/~paxed/nethack/nh343-showbuc.diff' # Show BUC
     p << 'http://bilious.alt.org/~paxed/nethack/nh343-showsym.diff' # Show Sym
-    p << 'http://ben-kiki.org/oren/statuscolors/nh343-statuscolors.patch' # statuscolors
+    p << 'https://raw.github.com/xenosoz/xenosoz-overlay/master/games-roguelike/nethack/files/nethack-3.4.3-statuscolors.patch' # statuscolors
     p << DATA
   end
 
