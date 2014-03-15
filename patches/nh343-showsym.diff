@@ -1,0 +1,252 @@
+diff -Nurd --exclude-from=diff_ignore_files.txt nethack-3.4.3-orig/include/config.h nethack-3.4.3-showsym/include/config.h
+--- nethack-3.4.3-orig/include/config.h	2003-12-09 17:26:08.000000000 +0200
++++ nethack-3.4.3-showsym/include/config.h	2003-12-10 06:58:42.000000000 +0200
+@@ -348,6 +348,8 @@
+  * bugs left here.
+  */
+ 
++#define SHOWSYM	/* Show object symbols in menus */
++
+ /*#define GOLDOBJ */	/* Gold is kept on obj chains - Helge Hafting */
+ /*#define AUTOPICKUP_EXCEPTIONS */ /* exceptions to autopickup */
+ 
+diff -Nurd --exclude-from=diff_ignore_files.txt nethack-3.4.3-orig/include/extern.h nethack-3.4.3-showsym/include/extern.h
+--- nethack-3.4.3-orig/include/extern.h	2003-12-09 17:23:52.000000000 +0200
++++ nethack-3.4.3-showsym/include/extern.h	2003-12-10 06:59:21.000000000 +0200
+@@ -808,7 +808,11 @@
+ E int NDECL(doprtool);
+ E int NDECL(doprinuse);
+ E void FDECL(useupf, (struct obj *,long));
++#ifndef SHOWSYM
+ E char *FDECL(let_to_name, (CHAR_P,BOOLEAN_P));
++#else
++E char *FDECL(let_to_name, (CHAR_P,BOOLEAN_P,BOOLEAN_P));
++#endif
+ E void NDECL(free_invbuf);
+ E void NDECL(reassign);
+ E int NDECL(doorganize);
+diff -Nurd --exclude-from=diff_ignore_files.txt nethack-3.4.3-orig/include/flag.h nethack-3.4.3-showsym/include/flag.h
+--- nethack-3.4.3-orig/include/flag.h	2003-12-09 17:23:52.000000000 +0200
++++ nethack-3.4.3-showsym/include/flag.h	2003-12-10 06:59:45.000000000 +0200
+@@ -270,6 +270,7 @@
+ 	boolean  lootabc;	/* use "a/b/c" rather than "o/i/b" when looting */
+ 	boolean  showrace;	/* show hero glyph by race rather than by role */
+ 	boolean  travelcmd;	/* allow travel command */
++	boolean  showsym;	/* show object symbols in menus */
+ 	int	 runmode;	/* update screen display during run moves */
+ #ifdef AUTOPICKUP_EXCEPTIONS
+ 	struct autopickup_exception *autopickup_exceptions[2];
+diff -Nurd --exclude-from=diff_ignore_files.txt nethack-3.4.3-orig/README.showsym nethack-3.4.3-showsym/README.showsym
+--- nethack-3.4.3-orig/README.showsym	1970-01-01 02:00:00.000000000 +0200
++++ nethack-3.4.3-showsym/README.showsym	2003-12-10 07:00:43.000000000 +0200
+@@ -0,0 +1,53 @@
++
++Patch: showsym v1.2
++
++This patch adds the object class symbol to all obj class title names
++in menus where that obj class accelerator key works. For example:
++
++
++Drop what type of items?
++
++a - All types
++b - Amulets  ('"')
++c - Weapons  (')')
++d - Armor  ('[')
++e - Scrolls ('?')
++f - Tools  ('(')
++(end)
++
++
++Or:
++
++
++Pick up what?
++
++Armor  ('[')
++a - a crested helmet
++Potions  ('!')
++b - 2 potions of booze
++c - 2 potions of confusion
++Rings  ('=')
++d - a topaz ring
++(end)
++
++
++
++CHANGES:
++
++ v1.2
++  - updated to 3.4.3 codebase.
++
++ v1.1
++  - updated to 3.4.2 codebase.
++  - added an option "showsym" to toggle the symbol showing.
++  - compile time option SHOWSYM.
++
++ v1.0
++  - initial release.
++
++
++-
++Pasi Kallinen
++pkalli@cs.joensuu.fi
++
++
+diff -Nurd --exclude-from=diff_ignore_files.txt nethack-3.4.3-orig/src/invent.c nethack-3.4.3-showsym/src/invent.c
+--- nethack-3.4.3-orig/src/invent.c	2003-12-09 17:23:52.000000000 +0200
++++ nethack-3.4.3-showsym/src/invent.c	2003-12-10 07:03:32.000000000 +0200
+@@ -1764,7 +1764,12 @@
+ 			    if (flags.sortpack && !classcount) {
+ 				any.a_void = 0;		/* zero */
+ 				add_menu(win, NO_GLYPH, &any, 0, 0, iflags.menu_headings,
+-				    let_to_name(*invlet, FALSE), MENU_UNSELECTED);
++#ifndef SHOWSYM
++				    let_to_name(*invlet, FALSE),
++#else
++				    let_to_name(*invlet, FALSE, FALSE),
++#endif
++					 MENU_UNSELECTED);
+ 				classcount++;
+ 			    }
+ 			    any.a_char = ilet;
+@@ -1909,7 +1914,13 @@
+ 	    if (otmp->unpaid) {
+ 		if (!flags.sortpack || otmp->oclass == *invlet) {
+ 		    if (flags.sortpack && !classcount) {
+-			putstr(win, 0, let_to_name(*invlet, TRUE));
++			putstr(win, 0,
++#ifndef SHOWSYM
++			       let_to_name(*invlet, TRUE)
++#else
++			       let_to_name(*invlet, TRUE, FALSE)
++#endif
++			       );
+ 			classcount++;
+ 		    }
+ 
+@@ -1929,7 +1940,13 @@
+     if (count > num_so_far) {
+ 	/* something unpaid is contained */
+ 	if (flags.sortpack)
+-	    putstr(win, 0, let_to_name(CONTAINED_SYM, TRUE));
++	    putstr(win, 0,
++#ifndef SHOWSYM
++		   let_to_name(CONTAINED_SYM, TRUE)
++#else
++		   let_to_name(CONTAINED_SYM, TRUE, FALSE)
++#endif
++		   );
+ 	/*
+ 	 * Search through the container objects in the inventory for
+ 	 * unpaid items.  The top level inventory items have already
+@@ -2588,11 +2605,20 @@
+ static NEARDATA char *invbuf = (char *)0;
+ static NEARDATA unsigned invbufsiz = 0;
+ 
++#ifndef SHOWSYM
+ char *
+ let_to_name(let,unpaid)
+ char let;
+ boolean unpaid;
+ {
++#else
++char *
++let_to_name(let,unpaid,showsym)
++char let;
++boolean unpaid,showsym;
++{
++	static const char *ocsymformat = "%s('%c')";
++#endif
+ 	const char *class_name;
+ 	const char *pos;
+ 	int oclass = (let >= 1 && let < MAXOCLASSES) ? let : 0;
+@@ -2605,7 +2631,12 @@
+ 	else
+ 	    class_name = names[0];
+ 
++#ifndef SHOWSYM
+ 	len = strlen(class_name) + (unpaid ? sizeof "unpaid_" : sizeof "");
++#else
++	len = strlen(class_name) + (unpaid ? sizeof "unpaid_" : sizeof "") +
++	    ((oclass && showsym) ? strlen(ocsymformat) : 0);
++#endif
+ 	if (len > invbufsiz) {
+ 	    if (invbuf) free((genericptr_t)invbuf);
+ 	    invbufsiz = len + 10; /* add slop to reduce incremental realloc */
+@@ -2615,6 +2646,11 @@
+ 	    Strcat(strcpy(invbuf, "Unpaid "), class_name);
+ 	else
+ 	    Strcpy(invbuf, class_name);
++#ifdef SHOWSYM
++	if (oclass && showsym)
++	    Sprintf(eos(invbuf), ocsymformat,
++		    iflags.menu_tab_sep ? "\t" : "  ", def_oc_syms[let]);
++#endif
+ 	return invbuf;
+ }
+ 
+diff -Nurd --exclude-from=diff_ignore_files.txt nethack-3.4.3-orig/src/o_init.c nethack-3.4.3-showsym/src/o_init.c
+--- nethack-3.4.3-orig/src/o_init.c	2003-12-09 17:23:52.000000000 +0200
++++ nethack-3.4.3-showsym/src/o_init.c	2003-12-10 07:04:24.000000000 +0200
+@@ -406,7 +406,13 @@
+ 	    if ((dis = disco[i]) && interesting_to_discover(dis)) {
+ 		ct++;
+ 		if (oclass != prev_class) {
+-		    putstr(tmpwin, iflags.menu_headings, let_to_name(oclass, FALSE));
++		    putstr(tmpwin, iflags.menu_headings,
++#ifndef SHOWSYM
++			   let_to_name(oclass, FALSE)
++#else
++			   let_to_name(oclass, FALSE, FALSE)
++#endif
++			   );
+ 		    prev_class = oclass;
+ 		}
+ 		Sprintf(buf, "%s %s",(objects[dis].oc_pre_discovered ? "*" : " "),
+diff -Nurd --exclude-from=diff_ignore_files.txt nethack-3.4.3-orig/src/options.c nethack-3.4.3-showsym/src/options.c
+--- nethack-3.4.3-orig/src/options.c	2003-12-09 17:23:52.000000000 +0200
++++ nethack-3.4.3-showsym/src/options.c	2003-12-10 07:04:50.000000000 +0200
+@@ -171,6 +171,11 @@
+ #else
+ 	{"showscore", (boolean *)0, FALSE, SET_IN_FILE},
+ #endif
++#ifdef SHOWSYM
++	{"showsym", &iflags.showsym, TRUE, SET_IN_GAME},
++#else
++	{"showsym", (boolean *)0, FALSE, SET_IN_FILE},
++#endif
+ 	{"silent", &flags.silent, TRUE, SET_IN_GAME},
+ 	{"softkeyboard", &iflags.wc2_softkeyboard, FALSE, SET_IN_FILE},
+ 	{"sortpack", &flags.sortpack, TRUE, SET_IN_GAME},
+diff -Nurd --exclude-from=diff_ignore_files.txt nethack-3.4.3-orig/src/pickup.c nethack-3.4.3-showsym/src/pickup.c
+--- nethack-3.4.3-orig/src/pickup.c	2003-12-09 17:23:52.000000000 +0200
++++ nethack-3.4.3-showsym/src/pickup.c	2003-12-10 07:06:00.000000000 +0200
+@@ -744,7 +744,12 @@
+ 		    if (qflags & INVORDER_SORT && !printed_type_name) {
+ 			any.a_obj = (struct obj *) 0;
+ 			add_menu(win, NO_GLYPH, &any, 0, 0, iflags.menu_headings,
+-					let_to_name(*pack, FALSE), MENU_UNSELECTED);
++#ifndef SHOWSYM
++					let_to_name(*pack, FALSE),
++#else
++					let_to_name(*pack, FALSE, iflags.showsym),
++#endif
++				 MENU_UNSELECTED);
+ 			printed_type_name = TRUE;
+ 		    }
+ 
+@@ -868,7 +873,12 @@
+ 			any.a_int = curr->oclass;
+ 			add_menu(win, NO_GLYPH, &any, invlet++,
+ 				def_oc_syms[(int)objects[curr->otyp].oc_class],
+-				ATR_NONE, let_to_name(*pack, FALSE),
++				ATR_NONE,
++#ifndef SHOWSYM
++				let_to_name(*pack, FALSE),
++#else
++				let_to_name(*pack, FALSE, iflags.showsym),
++#endif
+ 				MENU_UNSELECTED);
+ 			collected_type_name = TRUE;
+ 		   }
