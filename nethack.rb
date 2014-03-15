@@ -67,7 +67,7 @@ class Nethack < Formula
 
     # Make the game
     ENV.append_to_cflags "-I../include"
-    system 'cd src;make'
+    system 'cd src;make -j8'
 
     bin.install 'src/nethack'
     (libexec+'save').mkpath
