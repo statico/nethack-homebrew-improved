@@ -10,10 +10,13 @@ require 'formula'
 # instructions from the Wiki, and whatever else needed to be
 # done.
 # - @adamv
+#
+# Updated to add more patches.
+# - @statico
 
 class Nethack < Formula
   homepage 'http://www.nethack.org/index.html'
-  url 'https://downloads.sourceforge.net/project/nethack/nethack/3.4.3/nethack-343-src.tgz'
+  url 'http://downloads.sourceforge.net/project/nethack/nethack/3.4.3/nethack-343-src.tgz'
   version '3.4.3'
   sha1 'c26537093c38152bc0fbcec20468d975b35f59fd'
 
@@ -23,7 +26,14 @@ class Nethack < Formula
   skip_clean 'libexec/save'
 
   def patches
-    DATA
+    p = []
+    p << 'http://bilious.alt.org/~paxed/nethack/nh343-menucolor.diff' # Menucolors
+    p << 'http://bilious.alt.org/?download=44' # Paranoid Quit
+    p << 'http://bilious.alt.org/?download=205' # use_darkgrey
+    p << 'http://bilious.alt.org/~paxed/nethack/nh343-showbuc.diff' # Show BUC
+    p << 'http://bilious.alt.org/~paxed/nethack/nh343-showsym.diff' # Show Sym
+    p << 'http://ben-kiki.org/oren/statuscolors/nh343-statuscolors.patch' # statuscolors
+    p << DATA
   end
 
   def install
@@ -36,6 +46,10 @@ class Nethack < Formula
     inreplace "include/config.h",
       /^#\s*define HACKDIR.*$/,
       "#define HACKDIR \"#{libexec}\""
+
+    inreplace "include/config.h",
+      /^\/\*# define MENU_COLOR_REGEX_POSIX.*$/,
+      "#define MENU_COLOR_REGEX_POSIX"
 
     # Make the data first, before we munge the CFLAGS
     system "cd dat;make"
